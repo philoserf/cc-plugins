@@ -73,15 +73,15 @@ All decisions require explicit user action. Nothing is auto-approved.
 
 **Approve:** The skill edits the spec file directly using the Edit tool. The decision becomes a natural requirement in the appropriate section. No "Decision: ..." markers, no metadata in the spec. The spec reads like it was always written that way.
 
-**Reject:** The skill asks for a reason, modifies the staged code to undo the decision, runs tests, and stages the result if tests pass. If tests fail, the user resolves manually.
+**Reject:** The skill asks for a reason, then reverts only the specific lines identified in `diff_context`. If the revert is non-trivial (spans multiple files or requires redesign), the skill describes the required changes to the user and asks for confirmation before touching code. After reverting, it runs tests and stages the result if tests pass. If tests fail, the user resolves manually.
 
-**Edit:** The user rewrites the decision text. The skill then treats it as an approval with the edited text.
+**Edit:** The user rewrites the decision text. The skill then treats it as an approval with the edited text. The section identified during detection applies unless the edit changes the decision's scope — in that case, the skill re-evaluates section placement.
 
 **Skip:** The decision is recorded in the sidecar file and remains pending for the next invocation.
 
 ### 4. Commit
 
-Once all decisions are reviewed (none pending), the skill proceeds with the commit.
+Once all decisions are reviewed (none pending), the skill proceeds with the commit if this invocation was part of a commit flow. If invoked ad hoc (e.g., "is the spec still accurate?"), the skill stops after reporting — it does not initiate a commit.
 
 ## Coverage Check
 
@@ -90,7 +90,7 @@ On demand — user asks "what's missing?" or invokes `/use-trueup coverage`.
 - Reads all specs in `docs/superpowers/specs/`
 - Reads test files
 - Reports which spec requirements have no corresponding test
-- Uses requirement markers in tests when present, falls back to LLM matching when not
+- Uses requirement markers in tests when present, falls back to content matching when not. A test covers a requirement only if the test would fail when the requirement is violated — if that cannot be established from reading the test, the requirement is marked as not covered
 
 This is spec-to-test coverage only. Code coverage is pytest's job. Test creation is TDD's job. true-up only reports gaps.
 
@@ -110,7 +110,7 @@ If neither exists, the skill asks the user where specs live on first invocation.
 
 ## Sidecar File
 
-`docs/superpowers/specs/.true-up/decisions.jsonl` — holds pending and rejected decisions only. Approved decisions go directly into the spec and are not retained here.
+`.true-up/decisions.jsonl` relative to the resolved spec root — holds pending and rejected decisions only. Approved decisions go directly into the spec and are not retained here. If specs are in `docs/superpowers/specs/`, the sidecar is `docs/superpowers/specs/.true-up/decisions.jsonl`. If specs are in a custom path from `.true-up` config, derive from the first `spec_paths` entry's parent directory.
 
 ```json
 {
@@ -174,7 +174,7 @@ It ignores:
 
 ## Deduplication
 
-When the sidecar contains existing pending decisions, the skill checks new decisions against them before presenting duplicates. Same decision expressed differently should not create noise. The skill handles this through inline reasoning — no separate deduplication pipeline.
+When the sidecar contains existing decisions, the skill checks new decisions against both pending and rejected entries before presenting duplicates. If a new decision matches a pending one (same choice, different wording), the new one is dropped. If a new decision matches a rejected one, it is re-surfaced with context: "This decision was previously rejected ([reason]). Do you want to re-evaluate it?" The skill handles deduplication through inline reasoning — no separate deduplication pipeline.
 
 ## Skill File
 
@@ -195,6 +195,7 @@ to surface decisions that need review.
 - If no staged changes exist, the skill says so and exits.
 - If the sidecar directory doesn't exist, the skill creates it.
 - If a spec edit would be ambiguous (decision maps to multiple sections), the skill asks the user which section to update.
+- If a pending decision references a spec file that no longer exists, the skill tells the user and asks whether to drop the decision or redirect it to a different spec.
 
 ## Out of Scope for v0.1.0
 

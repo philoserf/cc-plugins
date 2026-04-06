@@ -1,6 +1,7 @@
 ---
 name: use-trueup
-description: Detects drift between implementation and spec before committing. Use when about to commit, after implementation work, or when asking "is the spec still accurate?" Reads staged diffs and compares against superpowers specs to surface decisions that need review.
+description: Detects drift between implementation and spec before committing. Use when about to commit, after implementation, or asking "is the spec accurate?" Compares staged diffs against specs to surface and reconcile decisions.
+argument-hint: "coverage"
 ---
 
 # true-up
@@ -12,6 +13,10 @@ brainstorming → writing-plans → [implementation] → true-up → commit
 ```
 
 true-up fills the gap between "start building" and "commit." It catches choices made in code that the spec doesn't reflect — architecture decisions, behavior changes, data model choices — and ensures the spec stays true before the commit lands.
+
+## Reference Files
+
+- [coverage.md](references/coverage.md) — Spec-to-test coverage analysis, invoked via `/use-trueup coverage`
 
 ## When to Use
 
@@ -198,7 +203,45 @@ If any decisions were skipped, warn: "[N] decision(s) were skipped and will resu
 
 ## Coverage Check
 
-When invoked as `/use-trueup coverage` or when the user asks about spec-to-test coverage, read and follow the instructions in `coverage.md` in this skill directory.
+When the user asks about spec-to-test coverage, read and follow the instructions in `references/coverage.md`.
+
+## Example Session
+
+```text
+> /use-trueup
+
+Checking staged changes... 3 files changed.
+Reading specs from docs/superpowers/specs/...
+Comparing diff against 2026-04-01-api-design.md...
+
+true-up found 2 decision(s) to review.
+
+Decision 1 of 2
+Question: How should API responses be cached?
+Decision made: Added in-memory LRU cache with 5-minute TTL.
+Spec: 2026-04-01-api-design.md § Performance
+Diff: src/api/handler.py:42-58
+
+> approve
+
+Updated 2026-04-01-api-design.md § Performance to reflect:
+Added in-memory LRU cache with 5-minute TTL.
+
+Decision 2 of 2
+Question: Should input validation run on internal endpoints?
+Decision made: Skipped validation for internal-only routes.
+Spec: 2026-04-01-api-design.md § Validation
+Diff: src/api/middleware.py:15-22
+
+> reject
+What's the reason? > Internal endpoints still receive untrusted data from other services.
+
+Reverting src/api/middleware.py:15-22...
+Running tests... 14/14 passed.
+Staged modified files.
+
+All decisions reviewed. Spec is up to date. Ready to commit.
+```
 
 ## Error Handling
 
