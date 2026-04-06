@@ -1,0 +1,28 @@
+version: "3"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  validate:
+    desc: Check marketplace.json validity and version sync
+    cmds:
+      - jq empty marketplace.json
+      - |
+        for dir in $(jq -r '.plugins[].source' marketplace.json); do
+          name=$(basename "$dir")
+          mp_ver=$(jq -r --arg n "$name" '.plugins[] | select(.name == $n) | .version' marketplace.json)
+          pj_ver=$(jq -r '.version' "$dir/.claude-plugin/plugin.json")
+          if [ "$mp_ver" != "$pj_ver" ]; then
+            echo "ERROR: $name version mismatch — marketplace.json=$mp_ver plugin.json=$pj_ver" >&2
+            exit 1
+          fi
+          echo "OK: $name v$mp_ver"
+        done
+
+  fmt:
+    desc: Format markdown files with prettier
+    cmds:
+      - bunx prettier --write "**/*.md"
