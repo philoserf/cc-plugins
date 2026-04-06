@@ -16,7 +16,7 @@ true-up fills the gap between "start building" and "commit." It catches choices 
 
 ## Reference Files
 
-- [coverage.md](references/coverage.md) — Spec-to-test coverage analysis, invoked via `/use-trueup coverage`
+- [coverage.md](references/coverage.md) — Spec-to-test coverage analysis, invoked via `/use-trueup:use-trueup coverage`
 
 ## When to Use
 
@@ -208,7 +208,7 @@ When the user asks about spec-to-test coverage, read and follow the instructions
 ## Example Session
 
 ```text
-> /use-trueup
+> /use-trueup:use-trueup
 
 Checking staged changes... 3 files changed.
 Reading specs from docs/superpowers/specs/...

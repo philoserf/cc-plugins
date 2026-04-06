@@ -1,0 +1,10 @@
+{
+  "name": "use-trueup",
+  "version": "0.1.0",
+  "description": "Detects drift between implementation and spec before committing. Compares staged diffs against specs to surface and reconcile decisions.",
+  "author": {
+    "name": "Mark Ayers"
+  },
+  "repository": "https://github.com/philoserf/cc-plugins",
+  "license": "MIT"
+}
