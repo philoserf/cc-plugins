@@ -29,7 +29,7 @@ Find the spec files to reconcile against. Check in this order:
      "spec_paths": ["docs/spec.md", "docs/design/"]
    }
    ```
-2. If `docs/superpowers/specs/` exists, use all `*-design.md` files in it.
+2. If `docs/superpowers/specs/` exists, use all `*.md` files in it.
 3. If neither exists, ask the user: "Where are your spec files? I need a path to check implementation decisions against."
 
 Store the resolved spec paths for the rest of this invocation. Do not cache across sessions.
