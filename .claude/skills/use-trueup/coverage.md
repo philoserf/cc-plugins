@@ -7,7 +7,7 @@ Analyze spec-to-test coverage. Report gaps only — never generate tests.
 Use the same discovery logic as the main skill:
 
 1. If `.true-up` exists in the project root, read it as JSON and use `spec_paths`.
-2. If `docs/superpowers/specs/` exists, use all `*-design.md` files in it.
+2. If `docs/superpowers/specs/` exists, use all `*.md` files in it.
 3. If neither exists, ask the user where their spec files live.
 
 ## Step 2: Extract Requirements
@@ -66,7 +66,7 @@ If no marker match, reason about whether existing tests exercise the requirement
 - Setup and fixture data
 - Test descriptions and docstrings
 
-Use conservative judgment. If uncertain whether a test covers a requirement, mark it as not covered.
+A test covers a requirement only if the test would fail when the requirement is violated. If that cannot be established from reading the test, mark the requirement as not covered.
 
 ## Step 5: Report
 

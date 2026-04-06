@@ -50,7 +50,7 @@ Read each spec file found during discovery. Hold the full content in context.
 
 ### Step 4: Check for pending decisions
 
-If `docs/superpowers/specs/.true-up/decisions.jsonl` exists, read it. Any entries with `"status": "pending"` are carried forward into this review session.
+If the sidecar file exists (`.true-up/decisions.jsonl` relative to the spec root — see Sidecar File section), read it. Any entries with `"status": "pending"` are carried forward into this review session.
 
 ### Step 5: Identify new decisions
 
@@ -79,7 +79,11 @@ For each decision found, determine:
 
 ### Step 6: Deduplicate
 
-If there are pending decisions from the sidecar (Step 4), compare each new decision against them. If a new decision is substantively the same as a pending one (same choice, possibly different wording), drop the new one. Use your judgment — different words for the same choice is a duplicate; a related but distinct choice is not.
+If there are pending or rejected decisions from the sidecar (Step 4), compare each new decision against them:
+
+- If a new decision matches a **pending** one (same choice, different wording), drop the new one.
+- If a new decision matches a **rejected** one, surface it with context: "This decision was previously rejected ([reason]). Do you want to re-evaluate it?"
+- Use your judgment — different words for the same choice is a duplicate; a related but distinct choice is not.
 
 ## Decision Review
 
@@ -117,7 +121,7 @@ Wait for the user's response before proceeding to the next decision.
 ### Reject
 
 1. Ask: "What's the reason for rejecting this?"
-2. After getting the reason, modify the staged code to undo the decision.
+2. After getting the reason, revert only the specific lines identified in `diff_context`. If the revert is non-trivial (spans multiple files or requires redesign), describe the required changes to the user and ask them to confirm before touching code.
 3. Run the project's test command to verify the change doesn't break anything.
 4. If tests pass: stage the modified files with `git add`, tell the user what changed.
 5. If tests fail: show the test output, tell the user "Automatic reversal broke tests. Please resolve manually." Write the decision to the sidecar with `"status": "rejected"` and the rejection reason.
@@ -127,7 +131,7 @@ Wait for the user's response before proceeding to the next decision.
 
 1. Ask: "How would you rewrite this decision?"
 2. Take the user's rewritten text.
-3. Follow the same flow as Approve, but use the edited text instead of the original.
+3. Follow the same flow as Approve, but use the edited text instead of the original. The section identified during detection applies unless the edit changes the decision's scope — in that case, re-evaluate section placement.
 
 ### Skip
 
@@ -141,7 +145,7 @@ Wait for the user's response before proceeding to the next decision.
 
 The sidecar stores pending and rejected decisions between invocations.
 
-**Location:** `docs/superpowers/specs/.true-up/decisions.jsonl`
+**Location:** `.true-up/decisions.jsonl` relative to the resolved spec root. If specs are in `docs/superpowers/specs/`, the sidecar is `docs/superpowers/specs/.true-up/decisions.jsonl`. If specs are in a custom path from `.true-up` config, derive from the first `spec_paths` entry's parent directory.
 
 **Format:** One JSON object per line:
 
@@ -161,7 +165,7 @@ The sidecar stores pending and rejected decisions between invocations.
 
 ### Writing to the sidecar
 
-- Create `docs/superpowers/specs/.true-up/` if it doesn't exist.
+- Create the `.true-up/` directory under the spec root if it doesn't exist.
 - Generate `id` as `dec-` followed by 8 random hex characters.
 - Set `created_at` to current ISO 8601 timestamp.
 - Append one JSON line per decision — never rewrite the whole file.
@@ -180,22 +184,17 @@ The sidecar stores pending and rejected decisions between invocations.
 
 ### Gitignore
 
-On first invocation, check that `docs/superpowers/specs/.true-up/` is in `.gitignore`. If not, append:
-
-```text
-# true-up working state
-docs/superpowers/specs/.true-up/
-```
+On first invocation, check that the sidecar directory is in `.gitignore`. If not, append the path (e.g., `docs/superpowers/specs/.true-up/`) to `.gitignore` with a `# true-up working state` comment.
 
 ## Commit
 
 After all decisions have been reviewed (none remaining):
 
 1. If any spec files were edited during this session, stage them: `git add [spec files]`
-2. Tell the user: "All decisions reviewed. Spec is up to date. Ready to commit."
-3. Proceed with the commit the user originally intended.
+2. Tell the user: "All decisions reviewed. Spec is up to date."
+3. If this invocation was part of a commit flow, proceed with the commit. If the user invoked true-up ad hoc (e.g., "is the spec still accurate?"), stop here — do not initiate a commit.
 
-If any decisions were skipped, warn: "[N] decision(s) were skipped and will resurface next time. Proceeding with commit." The user decides whether to commit with skipped decisions or go back and resolve them.
+If any decisions were skipped, warn: "[N] decision(s) were skipped and will resurface next time." The user decides whether to commit with skipped decisions or go back and resolve them.
 
 ## Coverage Check
 
@@ -206,7 +205,7 @@ When invoked as `/use-trueup coverage` or when the user asks about spec-to-test 
 - **No spec files found:** Tell the user. Ask where their specs live. Do not proceed without specs.
 - **No staged changes:** Tell the user "No staged changes to review." Stop.
 - **No drift detected:** Tell the user "No spec drift detected. Ready to commit." Proceed.
-- **Sidecar directory missing:** Create `docs/superpowers/specs/.true-up/` silently.
+- **Sidecar directory missing:** Create it silently under the spec root.
 - **Ambiguous section placement:** Ask the user which spec section the decision belongs in. Never guess.
 - **Spec file deleted:** If a pending decision references a spec file that no longer exists, tell the user and ask whether to drop the decision or redirect it to a different spec.
 
