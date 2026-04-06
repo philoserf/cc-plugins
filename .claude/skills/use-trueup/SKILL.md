@@ -197,6 +197,10 @@ After all decisions have been reviewed (none remaining):
 
 If any decisions were skipped, warn: "[N] decision(s) were skipped and will resurface next time. Proceeding with commit." The user decides whether to commit with skipped decisions or go back and resolve them.
 
+## Coverage Check
+
+When invoked as `/use-trueup coverage` or when the user asks about spec-to-test coverage, read and follow the instructions in `coverage.md` in this skill directory.
+
 ## Error Handling
 
 - **No spec files found:** Tell the user. Ask where their specs live. Do not proceed without specs.
