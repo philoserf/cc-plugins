@@ -20,7 +20,9 @@ use-trueup fills the gap between "start building" and "commit" by surfacing thos
 /use-trueup:use-trueup coverage
 ```
 
-The skill triggers naturally via superpowers' 1% rule when you're about to commit, or invoke it directly to ask "is the spec still accurate?"
+Invoke directly before committing or whenever you want to ask "is the spec still accurate?"
+
+Works with any project that maintains spec or design documents alongside code. If you use [superpowers](https://github.com/obra/superpowers), the skill triggers automatically via the 1% rule — but superpowers is not required.
 
 ## Origin
 
