@@ -1,5 +1,7 @@
 # cc-plugins
 
+> **Archived.** This repository is no longer maintained.
+
 Claude Code plugins by [philoserf](https://github.com/philoserf).
 
 ## Installation
